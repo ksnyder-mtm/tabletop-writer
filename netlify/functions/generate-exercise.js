@@ -97,10 +97,10 @@ exports.handler = async (event, context) => {
 
 function createTabletopPrompt(sector, theme, objectives, duration) {
   const objectivesList = objectives.map(obj => `• ${obj}`).join('\n');
-  const numPhases = duration === 90 ? 4 : 3;
+  const numPhases = duration === 90 ? 6 : 4;
   const phaseExamples = duration === 90 
-    ? '"Phase 1 (Minutes 1-10)", "Phase 2 (Minutes 15-25)", "Phase 3 (Minutes 30-40)", "Phase 4 (Minutes 45-55)"'
-    : '"Phase 1 (Minutes 1-10)", "Phase 2 (Minutes 15-25)", "Phase 3 (Minutes 30-40)"';
+    ? '"Phase 1 (Minutes 1-10)", "Phase 2 (Minutes 12-22)", "Phase 3 (Minutes 24-34)", "Phase 4 (Minutes 36-46)", "Phase 5 (Minutes 48-58)", "Phase 6 (Minutes 60-70)"'
+    : '"Phase 1 (Minutes 1-10)", "Phase 2 (Minutes 12-22)", "Phase 3 (Minutes 24-34)", "Phase 4 (Minutes 36-46)"';
   
   return `Create a comprehensive tabletop exercise scenario for a nonprofit organization. Use this specification:
 
@@ -147,9 +147,9 @@ For each phase include:
 - **Discussion questions** (2-3 focused questions for executive decision-making)
 
 **5. WRAP-UP SECTION**
-Add a final section titled "Next Steps and Improvements (Minutes ${duration - 10}-${duration})" with:
+Add a final section titled "Next Steps and Improvements (Minutes ${duration - 5}-${duration})" with:
 - Key takeaways from the exercise
-- 3-4 actionable next steps for the organization
+- 2-3 actionable next steps for the organization
 - Areas for improvement identified during the simulation
 
 **FORMATTING REQUIREMENTS:**
