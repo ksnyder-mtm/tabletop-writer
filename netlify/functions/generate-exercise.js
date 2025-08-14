@@ -97,21 +97,56 @@ exports.handler = async (event, context) => {
 function createTabletopPrompt(sector, theme, objectives) {
   const objectivesList = objectives.map(obj => `• ${obj}`).join('\n');
   
-  return `Create a detailed tabletop exercise scenario for a nonprofit organization in the ${sector} sector. The exercise should focus on ${theme} and address these specific learning objectives:
+  return `Create a comprehensive tabletop exercise scenario for a nonprofit organization. Use this specification:
 
+**ORGANIZATION CONTEXT:**
+- Sector: ${sector}
+- Primary threat: ${theme}
+- Learning objectives to address:
 ${objectivesList}
 
-Based on the format of professional tabletop exercises, please create:
+**REQUIRED STRUCTURE:**
 
-1. **Scenario Overview**: A realistic 2-3 sentence description of the crisis situation
-2. **Organization Profile**: Brief context about the fictional nonprofit (name, size, mission)
-3. **Key Roles & Personnel**: 4-6 named characters with titles and responsibilities
-4. **Exercise Phases**: 3-4 progressive phases that escalate the scenario, each with:
-   - Phase title and timeline (e.g., "Hour 1-2" or "Day 1")
-   - Situation update/inject
-   - 3-4 targeted discussion questions that test the learning objectives
+**1. SCENARIO OVERVIEW**
+Write 2-3 sentences describing the crisis situation. Make it realistic and relevant to ${sector} organizations.
 
-Format the response in clean HTML that will integrate well with the existing interface. Use semantic headings (h3, h4) and proper structure. Keep the tone professional but accessible for nonprofit audiences.
+**2. ORGANIZATION PROFILE**
+Create a fictional nonprofit with:
+- Realistic name appropriate for ${sector} sector
+- Staff size (50-300 people)
+- Brief mission statement
+- Key operational details that matter for the crisis
 
-The scenario should be realistic and relevant to the ${sector} sector, incorporating modern challenges that nonprofits face. Ensure discussion questions promote strategic thinking about crisis response, not just tactical actions.`;
+**3. INCIDENT RESPONSE TEAM**
+List 5-6 key roles with names and titles:
+- Executive leadership (ED/CEO)
+- IT/Technical lead  
+- Communications lead
+- Legal counsel
+- Operations lead
+- Other relevant roles for the scenario
+
+**4. EXERCISE PHASES (3-4 phases)**
+For each phase include:
+- **Phase title** with timeline (e.g., "Initial Discovery (Hour 1-2)")
+- **Situation description** (2-3 sentences of what's happening)
+- **Key inject** (new information that complicates the situation)
+- **Discussion questions** (3-4 questions that test the learning objectives)
+
+**FORMATTING REQUIREMENTS:**
+- Use HTML headings: <h3> for main sections, <h4> for phases
+- Use <p> tags for paragraphs
+- Use <ul> and <li> for lists
+- Use <strong> for emphasis on key points
+- Keep tone professional but accessible
+- Make discussion questions thought-provoking, focusing on decision-making and process testing
+
+**REALISM REQUIREMENTS:**
+- Base on actual nonprofit challenges
+- Include realistic operational constraints (budget, staffing, partnerships)
+- Reference appropriate regulations/compliance for the sector
+- Include modern technology and communication challenges
+- Consider multi-stakeholder coordination (board, partners, donors, media)
+
+Generate a complete, ready-to-use tabletop exercise that could be facilitated immediately.`;
 }
