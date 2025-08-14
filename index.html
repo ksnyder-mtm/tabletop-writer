@@ -264,7 +264,7 @@
     <!-- Header -->
     <header class="p-4 bg-white/80 backdrop-blur-sm shadow-sm sticky top-0 z-10">
         <div class="container mx-auto max-w-5xl flex items-center">
-            <img src="https://storage.googleapis.com/gemini-prod-us-west1-433550357225/images/d37a2456-429a-4713-b541-b840c1154c1f.png" alt="Meet the Moment Logo" style="height: 60px;">
+            <img src="./Assets/MTM - 200 x 200px.png" alt="Meet the Moment Logo" style="height: 60px;">
         </div>
     </header>
 
@@ -415,7 +415,7 @@
 
     <!-- Footer -->
     <footer style="background-color: #fef4e3; text-align: center; padding: 24px;" class="mt-12">
-        <img src="https://storage.googleapis.com/gemini-prod-us-west1-433550357225/images/d37a2456-429a-4713-b541-b840c1154c1f.png" alt="Meet the Moment" style="height: 40px; display: inline-block;">
+        <img src="./Assets/MTM - 200 x 200px.png" alt="Meet the Moment" style="height: 40px; display: inline-block;">
         <p style="color: #666; font-size: 14px; margin-top: 8px;">Prototype by Meet the Moment</p>
     </footer>
 
@@ -652,7 +652,7 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-4-4m4 4l4-4m5-2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
-                                Download
+                                Print/Save as PDF
                             </button>
                         </div>
                         <div class="prose prose-lg max-w-none">
@@ -757,33 +757,30 @@
                 this.elements.errorArea.innerHTML = '';
             }
 
-            // Download exercise as HTML file
+            // Print exercise (user can save as PDF)
             downloadExercise() {
                 if (!this.currentExerciseContent || !this.currentFormData) {
-                    this.showErrors(['No exercise content available for download.']);
+                    this.showErrors(['No exercise content available for printing.']);
                     return;
                 }
 
-                const fileName = `tabletop-exercise-${this.currentFormData.sector.toLowerCase().replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.html`;
+                // Create a new window for printing
+                const printWindow = window.open('', '_blank');
+                const printContent = this.generatePrintHTML();
                 
-                const htmlContent = this.generateDownloadHTML();
-                const blob = new Blob([htmlContent], { type: 'text/html' });
-                const url = URL.createObjectURL(blob);
+                printWindow.document.write(printContent);
+                printWindow.document.close();
                 
-                const downloadLink = document.createElement('a');
-                downloadLink.href = url;
-                downloadLink.download = fileName;
-                downloadLink.style.display = 'none';
-                
-                document.body.appendChild(downloadLink);
-                downloadLink.click();
-                document.body.removeChild(downloadLink);
-                
-                URL.revokeObjectURL(url);
+                // Wait for content to load, then print
+                printWindow.onload = function() {
+                    setTimeout(() => {
+                        printWindow.print();
+                    }, 250);
+                };
             }
 
-            // Generate complete HTML file for download
-            generateDownloadHTML() {
+            // Generate HTML for printing
+            generatePrintHTML() {
                 return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -791,24 +788,45 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tabletop Exercise: ${this.escapeHtml(this.currentFormData.theme)}</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-               line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; }
-        h1 { color: #1c487b; border-bottom: 3px solid #1ab1d2; padding-bottom: 10px; }
-        h3 { color: #1c487b; margin-top: 2rem; }
-        h4 { color: #f18f38; margin-top: 1.5rem; }
-        .meta-info { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        @media print {
+            body { margin: 0; padding: 20px; }
+            .no-print { display: none; }
+        }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; 
+        }
+        .header { text-align: center; margin-bottom: 2rem; border-bottom: 2px solid #1ab1d2; padding-bottom: 1rem; }
+        .header img { height: 60px; margin-bottom: 10px; }
+        h1 { color: #1c487b; margin: 0; }
+        h3 { color: #1c487b; margin-top: 2rem; page-break-after: avoid; }
+        h4 { color: #f18f38; margin-top: 1.5rem; page-break-after: avoid; }
+        .meta-info { 
+            background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;
+            border-left: 4px solid #1ab1d2;
+        }
         .meta-info strong { color: #1c487b; }
         ul li { margin: 5px 0; }
-        .footer { margin-top: 3rem; padding-top: 2rem; border-top: 1px solid #e5e5e5; 
-                  text-align: center; color: #666; font-size: 14px; }
+        .exercise-content h3 { border-bottom: 1px solid #ddd; padding-bottom: 0.5rem; }
+        .exercise-content h4 { border-left: 4px solid #f18f38; padding-left: 1rem; }
+        .footer { 
+            margin-top: 3rem; padding-top: 2rem; border-top: 1px solid #e5e5e5; 
+            text-align: center; color: #666; font-size: 14px; page-break-inside: avoid;
+        }
+        .page-break { page-break-before: always; }
     </style>
 </head>
 <body>
-    <h1>Tabletop Exercise: ${this.escapeHtml(this.currentFormData.theme)}</h1>
+    <div class="header">
+        <img src="./Assets/MTM - 200 x 200px.png" alt="Meet the Moment Logo">
+        <h1>Tabletop Exercise: ${this.escapeHtml(this.currentFormData.theme)}</h1>
+        <p style="color: #666; margin: 0;">60-Minute Executive Crisis Simulation</p>
+    </div>
     
     <div class="meta-info">
         <p><strong>Organization Sector:</strong> ${this.escapeHtml(this.currentFormData.sector)}</p>
         <p><strong>Exercise Theme:</strong> ${this.escapeHtml(this.currentFormData.theme)}</p>
+        <p><strong>Duration:</strong> 60 minutes</p>
         <p><strong>Learning Objectives:</strong></p>
         <ul>
             ${this.currentFormData.objectives.map(obj => `<li>${this.escapeHtml(obj)}</li>`).join('')}
@@ -821,8 +839,9 @@
     </div>
 
     <div class="footer">
-        <p>Generated by Meet the Moment's Tabletop Exercise Generator</p>
+        <p><strong>Generated by Meet the Moment's Tabletop Exercise Generator</strong></p>
         <p>This exercise is designed for discussion-based crisis response training</p>
+        <p>For more resources, visit meetthemoment.org</p>
     </div>
 </body>
 </html>`;

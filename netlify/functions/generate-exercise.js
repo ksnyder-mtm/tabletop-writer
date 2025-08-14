@@ -131,21 +131,24 @@ List 5-6 key roles from these categories:
 - Legal counsel
 - HR lead (if relevant to scenario)
 
-**4. EXERCISE PHASES (3-4 phases)**
+**4. EXERCISE PHASES (3 phases maximum)**
+This is a 60-minute executive-level tabletop (not technical). Create exactly 3 phases:
+
 For each phase include:
-- **Phase title** with timeline (e.g., "Initial Discovery (Hour 1-2)")
+- **Phase title** with timeline (e.g., "Opening (Minutes 1-10)", "Escalation (Minutes 15-30)", "Resolution (Minutes 35-50)")
 - **Situation description** (2-3 sentences of what's happening)
 - **Key inject** (new information that complicates the situation)
-- **Discussion questions** (3-4 questions that test the learning objectives)
+- **Discussion questions** (2-3 focused questions for executive decision-making)
 
 **FORMATTING REQUIREMENTS:**
 - Use HTML headings: <h3> for main sections, <h4> for phases
-- Use <p> tags for paragraphs with <br><br> between sections for spacing
+- Add <div style="margin-bottom: 2rem;"></div> after each major section for spacing
+- Add <div style="margin-bottom: 1.5rem;"></div> after each phase
+- Add <div style="margin-bottom: 1rem;"></div> after each situation description
 - Use <ul> and <li> for lists
 - Use <strong> for emphasis on key points
-- Add <div style="margin-bottom: 2rem;"> around each major section for spacing
-- Keep tone professional but accessible
-- Make discussion questions thought-provoking, focusing on decision-making and process testing
+- Keep tone professional but accessible for busy executives
+- Focus discussion questions on strategic decisions, not technical implementation
 
 **REALISM REQUIREMENTS:**
 - Base on actual nonprofit challenges
