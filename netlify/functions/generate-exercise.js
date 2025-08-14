@@ -9,7 +9,7 @@ exports.handler = async (event, context) => {
 
   try {
     // Parse request body
-    const { sector, theme, objectives } = JSON.parse(event.body);
+    const { sector, theme, objectives, duration } = JSON.parse(event.body);
     
     // Validate required fields
     if (!sector || !theme || !objectives || objectives.length === 0) {
@@ -30,7 +30,7 @@ exports.handler = async (event, context) => {
     }
 
     // Create the prompt based on sample exercises
-    const prompt = createTabletopPrompt(sector, theme, objectives);
+    const prompt = createTabletopPrompt(sector, theme, objectives, duration || 60);
     
     // Call Anthropic API
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -80,6 +80,7 @@ exports.handler = async (event, context) => {
           sector,
           theme,
           objectives,
+          duration,
           generatedAt: new Date().toISOString()
         }
       })
@@ -94,14 +95,19 @@ exports.handler = async (event, context) => {
   }
 };
 
-function createTabletopPrompt(sector, theme, objectives) {
+function createTabletopPrompt(sector, theme, objectives, duration) {
   const objectivesList = objectives.map(obj => `• ${obj}`).join('\n');
+  const numPhases = duration === 90 ? 4 : 3;
+  const phaseExamples = duration === 90 
+    ? '"Phase 1 (Minutes 1-10)", "Phase 2 (Minutes 15-25)", "Phase 3 (Minutes 30-40)", "Phase 4 (Minutes 45-55)"'
+    : '"Phase 1 (Minutes 1-10)", "Phase 2 (Minutes 15-25)", "Phase 3 (Minutes 30-40)"';
   
   return `Create a comprehensive tabletop exercise scenario for a nonprofit organization. Use this specification:
 
 **ORGANIZATION CONTEXT:**
 - Sector: ${sector}
 - Primary threat: ${theme}
+- Exercise duration: ${duration} minutes
 - Learning objectives to address:
 ${objectivesList}
 
@@ -131,14 +137,20 @@ List 5-6 key roles from these categories:
 - Legal counsel
 - HR lead (if relevant to scenario)
 
-**4. EXERCISE PHASES (3 phases maximum)**
-This is a 60-minute executive-level tabletop (not technical). Create exactly 3 phases:
+**4. EXERCISE PHASES (exactly ${numPhases} phases)**
+This is a ${duration}-minute executive-level tabletop (not technical). Create exactly ${numPhases} phases:
 
 For each phase include:
-- **Phase title** with timeline (e.g., "Opening (Minutes 1-10)", "Escalation (Minutes 15-30)", "Resolution (Minutes 35-50)")
+- **Phase title** with timeline (e.g., ${phaseExamples})
 - **Situation description** (2-3 sentences of what's happening)
 - **Key inject** (new information that complicates the situation)
 - **Discussion questions** (2-3 focused questions for executive decision-making)
+
+**5. WRAP-UP SECTION**
+Add a final section titled "Next Steps and Improvements (Minutes ${duration - 10}-${duration})" with:
+- Key takeaways from the exercise
+- 3-4 actionable next steps for the organization
+- Areas for improvement identified during the simulation
 
 **FORMATTING REQUIREMENTS:**
 - Use HTML headings: <h3> for main sections, <h4> for phases
