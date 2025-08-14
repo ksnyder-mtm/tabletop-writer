@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tabletop Exercise Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* MTM Style Guide Implementation */
+        :root {
+            --primary: #1ab1d2; /* light blue */
+            --accent: #f18f38;  /* orange */
+            --navy: #1c487b;    /* dark blue */
+            --soft-blue: #85abbd; /* muted blue */
+            --bg-cream: #fef4e3;
+            --bg-white: #fafdfe;
+            --text-body: #333333;
+            --text-secondary: #666666;
+        }
+
+        body {
+            font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: var(--bg-cream);
+            color: var(--text-body);
+        }
+
+        .h1 { font-size: 40px; font-weight: 700; color: var(--navy); }
+        .h2 { font-size: 32px; font-weight: 700; color: var(--navy); }
+        .h3 { font-size: 24px; font-weight: 500; color: var(--navy); }
+        p, label, li { line-height: 1.6; }
+
+        .card {
+            background-color: var(--bg-white);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+        }
+
+        .btn {
+            border-radius: 6px;
+            padding: 12px 24px;
+            font-weight: 500;
+            transition: all 0.2s ease-in-out;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-accent {
+            background-color: var(--accent);
+            color: white;
+        }
+        .btn-accent:hover {
+            background-color: #d97d2a; /* Darker shade of accent */
+        }
+
+        .form-input, .form-select {
+            border-radius: 4px;
+            border: 1px solid #e5e5e5;
+            padding: 10px;
+            width: 100%;
+            transition: border-color 0.2s;
+        }
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(26, 177, 210, 0.3);
+        }
+        .form-checkbox {
+            width: 1.25rem;
+            height: 1.25rem;
+            border-radius: 4px;
+            border-color: #e5e5e5;
+            color: var(--primary);
+        }
+        .form-checkbox:focus {
+             ring: var(--primary);
+        }
+
+        /* Enhanced form section styling */
+        .form-section {
+            position: relative;
+            padding: 2rem;
+            border-left: 4px solid var(--primary);
+            transition: all 0.3s ease;
+        }
+        .form-section:hover {
+            border-left-color: var(--accent);
+            background: linear-gradient(to right, rgba(26, 177, 210, 0.02), transparent);
+        }
+
+        .section-number {
+            position: absolute;
+            top: -12px;
+            left: -12px;
+            width: 24px;
+            height: 24px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 700;
+            box-shadow: 0 2px 8px rgba(26, 177, 210, 0.3);
+        }
+
+        /* Checkbox enhancement */
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+        .checkbox-item {
+            padding: 12px 16px;
+            border: 2px solid #e5e5e5;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            position: relative;
+        }
+        .checkbox-item:hover {
+            border-color: var(--primary);
+            background-color: rgba(26, 177, 210, 0.05);
+        }
+        .checkbox-item input:checked + label {
+            color: var(--navy);
+            font-weight: 500;
+        }
+        .checkbox-item:has(input:checked) {
+            border-color: var(--primary);
+            background-color: rgba(26, 177, 210, 0.1);
+        }
+
+        /* Progress indicator */
+        .progress-bar {
+            height: 4px;
+            background: #e5e5e5;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            transition: width 0.3s ease;
+            width: 100%;
+        }
+
+        /* Enhanced button styles */
+        .btn {
+            position: relative;
+            overflow: hidden;
+        }
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        /* Loading spinner enhancement */
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border-left-color: var(--primary);
+            border-top-color: var(--accent);
+            animation: spin 1s ease infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Success state styling */
+        .success-checkmark {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--primary);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            animation: successPop 0.5s ease-out;
+        }
+        @keyframes successPop {
+            0% { transform: scale(0); }
+            80% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        /* Form input enhancements */
+        .form-input:focus, .form-select:focus {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(26, 177, 210, 0.2);
+        }
+
+        /* Error styling improvements */
+        .error-container {
+            background: linear-gradient(135deg, #fef2f2, #fee2e2);
+            border-left: 4px solid #ef4444;
+            animation: errorSlideIn 0.3s ease-out;
+        }
+        @keyframes errorSlideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Interactive elements */
+        .form-section h2 {
+            position: relative;
+            padding-left: 1rem;
+        }
+        .form-section h2::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 60%;
+            background: var(--accent);
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="p-4 bg-white/80 backdrop-blur-sm shadow-sm sticky top-0 z-10">
+        <div class="container mx-auto max-w-5xl flex items-center">
+            <img src="https://storage.googleapis.com/gemini-prod-us-west1-433550357225/images/d37a2456-429a-4713-b541-b840c1154c1f.png" alt="Meet the Moment Logo" style="height: 60px;">
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow container mx-auto max-w-5xl p-4 sm:p-6 md:p-8">
+        <div class="text-center mb-12">
+            <h1 class="h1 mb-2">Tabletop Exercise Generator</h1>
+            <p class="text-lg text-gray-600">Design a targeted crisis simulation for your non-profit's leadership team.</p>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="progress-bar mb-8">
+            <div class="progress-fill"></div>
+        </div>
+
+        <!-- Input Form -->
+        <form id="ttp-form" class="card p-8 space-y-12">
+            <!-- Step 1: Organization Profile -->
+            <div class="form-section">
+                <div class="section-number">1</div>
+                <h2 class="h3 mb-6">Organization Profile</h2>
+                <div>
+                    <label for="nonprofit-sector" class="block text-sm font-medium text-gray-700 mb-2">Non-Profit Sector</label>
+                    <select id="nonprofit-sector" name="sector" class="form-select">
+                        <option>Education</option>
+                        <option>Human & Civil Rights</option>
+                        <option>Environmental</option>
+                        <option>Health Services</option>
+                        <option>Advocacy & Political</option>
+                        <option>Arts & Culture</option>
+                        <option>International Aid</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Step 2: Scenario Design -->
+            <div class="form-section">
+                <div class="section-number">2</div>
+                <h2 class="h3 mb-6">Scenario Design</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label for="scenario-theme" class="block text-sm font-medium text-gray-700 mb-2">Select a Primary Threat Theme</label>
+                        <select id="scenario-theme" name="theme" class="form-select">
+                            <option value="funding">Sudden Funding Crisis / Grant Freeze</option>
+                            <option value="gov">Government Action (Subpoena, Investigation)</option>
+                            <option value="cyber_breach">Cybersecurity Breach (Ransomware, Data Leak)</option>
+                            <option value="reputation">Reputational Damage (Disinformation, Staff Misconduct)</option>
+                            <option value="safety">Digital & Physical Safety (Harassment, Doxxing)</option>
+                            <option value="vendor_compromise">Third-Party / Vendor Compromise</option>
+                            <option value="insider_threat">Insider Threat (Accidental or Malicious)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="custom-theme" class="block text-sm font-medium text-gray-700 mb-2">Or, Create a Custom Theme</label>
+                        <input type="text" id="custom-theme" name="custom_theme" class="form-input" placeholder="e.g., A physical break-in at the main office">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Exercise Objectives -->
+            <div class="form-section">
+                <div class="section-number">3</div>
+                <h2 class="h3 mb-6">Exercise Objectives (Select up to 3)</h2>
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input id="obj1" name="objectives" type="checkbox" value="Test internal communication protocols" class="form-checkbox">
+                        <label for="obj1" class="font-medium text-gray-700 cursor-pointer">Test internal communication protocols.</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input id="obj2" name="objectives" type="checkbox" value="Validate the process for Board notification" class="form-checkbox">
+                        <label for="obj2" class="font-medium text-gray-700 cursor-pointer">Validate the process for Board notification.</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input id="obj3" name="objectives" type="checkbox" value="Clarify decision-making authority" class="form-checkbox">
+                        <label for="obj3" class="font-medium text-gray-700 cursor-pointer">Clarify decision-making authority.</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input id="obj4" name="objectives" type="checkbox" value="Assess legal and comms coordination" class="form-checkbox">
+                        <label for="obj4" class="font-medium text-gray-700 cursor-pointer">Assess legal & comms coordination.</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input id="obj5" name="objectives" type="checkbox" value="Test financial continuity plans" class="form-checkbox">
+                        <label for="obj5" class="font-medium text-gray-700 cursor-pointer">Test financial continuity plans.</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input id="obj6" name="objectives" type="checkbox" value="Evaluate data privacy response" class="form-checkbox">
+                        <label for="obj6" class="font-medium text-gray-700 cursor-pointer">Evaluate data privacy response.</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input id="obj7" name="objectives" type="checkbox" value="Test data governance processes" class="form-checkbox">
+                        <label for="obj7" class="font-medium text-gray-700 cursor-pointer">Test data governance processes.</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input id="obj8" name="objectives" type="checkbox" value="Validate partner coordination procedures" class="form-checkbox">
+                        <label for="obj8" class="font-medium text-gray-700 cursor-pointer">Validate partner coordination procedures.</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input id="obj9" name="objectives" type="checkbox" value="Assess incident response team activation" class="form-checkbox">
+                        <label for="obj9" class="font-medium text-gray-700 cursor-pointer">Assess incident response team activation.</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input id="obj10" name="objectives" type="checkbox" value="Test containment and mitigation procedures" class="form-checkbox">
+                        <label for="obj10" class="font-medium text-gray-700 cursor-pointer">Test containment and mitigation procedures.</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input id="obj11" name="objectives" type="checkbox" value="Evaluate staff safety protocols" class="form-checkbox">
+                        <label for="obj11" class="font-medium text-gray-700 cursor-pointer">Evaluate staff safety protocols.</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input id="obj12" name="objectives" type="checkbox" value="Practice ransom/extortion response decisions" class="form-checkbox">
+                        <label for="obj12" class="font-medium text-gray-700 cursor-pointer">Practice ransom/extortion response decisions.</label>
+                    </div>
+                </div>
+                 <div class="mt-6">
+                    <label for="custom-objective" class="block text-sm font-medium text-gray-700 mb-2">Custom Objective (Optional)</label>
+                    <input type="text" id="custom-objective" name="custom_objective" class="form-input" placeholder="Enter a specific objective for your organization">
+                </div>
+            </div>
+
+            <!-- Error Message Area -->
+            <div id="form-errors" class="hidden error-container p-4 mb-4 text-red-700 rounded-lg" role="alert" aria-live="polite">
+                <!-- Error messages will appear here -->
+            </div>
+
+            <!-- Submit Button -->
+            <div class="text-center pt-4">
+                <button type="submit" class="btn btn-accent text-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    Generate Exercise
+                </button>
+            </div>
+        </form>
+
+        <!-- Output Area -->
+        <div id="output-area" class="mt-12 hidden">
+             <div id="loading-spinner" class="flex justify-center items-center py-8">
+                <div class="spinner"></div>
+            </div>
+            <div id="generated-content" class="card p-8 hidden">
+                <!-- Generated tabletop will appear here -->
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer style="background-color: #fef4e3; text-align: center; padding: 24px;" class="mt-12">
+        <img src="https://storage.googleapis.com/gemini-prod-us-west1-433550357225/images/d37a2456-429a-4713-b541-b840c1154c1f.png" alt="Meet the Moment" style="height: 40px; display: inline-block;">
+        <p style="color: #666; font-size: 14px; margin-top: 8px;">Prototype by Meet the Moment</p>
+    </footer>
+
+    <script>
+        // Tabletop Exercise Generator Application
+        class TabletopExerciseApp {
+            constructor() {
+                this.elements = this.cacheElements();
+                this.config = {
+                    maxObjectives: 3,
+                    simulationDelay: 1500
+                };
+                this.init();
+            }
+
+            // Cache DOM elements to avoid repeated queries
+            cacheElements() {
+                return {
+                    form: document.getElementById('ttp-form'),
+                    outputArea: document.getElementById('output-area'),
+                    loadingSpinner: document.getElementById('loading-spinner'),
+                    generatedContent: document.getElementById('generated-content'),
+                    customThemeInput: document.getElementById('custom-theme'),
+                    themeDropdown: document.getElementById('scenario-theme'),
+                    checkboxes: document.querySelectorAll('input[name="objectives"]'),
+                    submitButton: document.querySelector('button[type="submit"]'),
+                    errorArea: document.getElementById('form-errors'),
+                    customObjectiveInput: document.getElementById('custom-objective')
+                };
+            }
+
+            // Initialize event listeners and setup
+            init() {
+                this.bindEvents();
+                this.setupFormValidation();
+            }
+
+            // Bind all event listeners
+            bindEvents() {
+                this.elements.form.addEventListener('submit', (e) => this.handleFormSubmit(e));
+                this.elements.customThemeInput.addEventListener('input', () => this.handleCustomThemeInput());
+                this.elements.checkboxes.forEach(checkbox => {
+                    checkbox.addEventListener('change', (e) => this.handleObjectiveChange(e));
+                });
+            }
+
+            // Handle form submission
+            handleFormSubmit(event) {
+                event.preventDefault();
+                
+                if (!this.validateForm()) {
+                    return;
+                }
+
+                const formData = this.extractFormData();
+                this.showLoading();
+                this.generateExercise(formData);
+            }
+
+            // Extract and structure form data
+            extractFormData() {
+                const formData = new FormData(this.elements.form);
+                const selectedObjectives = Array.from(
+                    document.querySelectorAll('input[name="objectives"]:checked')
+                ).map(cb => cb.value);
+                
+                const customObjective = formData.get('custom_objective');
+                if (customObjective && customObjective.trim()) {
+                    selectedObjectives.push(customObjective.trim());
+                }
+                
+                const theme = formData.get('custom_theme').trim() || 
+                             this.elements.themeDropdown.options[this.elements.themeDropdown.selectedIndex].text;
+
+                return {
+                    sector: formData.get('sector'),
+                    theme: theme,
+                    objectives: selectedObjectives
+                };
+            }
+
+            // Basic form validation
+            validateForm() {
+                this.clearErrors();
+                const errors = [];
+                
+                const objectives = document.querySelectorAll('input[name="objectives"]:checked');
+                const customObjective = this.elements.customObjectiveInput.value.trim();
+                
+                if (objectives.length === 0 && !customObjective) {
+                    errors.push('Please select at least one objective or enter a custom objective.');
+                }
+                
+                if (objectives.length > this.config.maxObjectives) {
+                    errors.push(`You can select a maximum of ${this.config.maxObjectives} objectives.`);
+                }
+                
+                if (errors.length > 0) {
+                    this.showErrors(errors);
+                    return false;
+                }
+                
+                return true;
+            }
+
+            // Setup form validation rules
+            setupFormValidation() {
+                // Add any additional validation setup here
+            }
+
+            // Handle objective checkbox changes
+            handleObjectiveChange(event) {
+                const checkedCount = document.querySelectorAll('input[name="objectives"]:checked').length;
+                
+                if (checkedCount > this.config.maxObjectives) {
+                    this.showErrors([`You can select a maximum of ${this.config.maxObjectives} objectives.`]);
+                    event.target.checked = false;
+                } else {
+                    this.clearErrors();
+                }
+            }
+
+            // Handle custom theme input changes
+            handleCustomThemeInput() {
+                const hasCustomTheme = this.elements.customThemeInput.value.trim() !== '';
+                
+                this.elements.themeDropdown.disabled = hasCustomTheme;
+                this.elements.themeDropdown.classList.toggle('bg-gray-100', hasCustomTheme);
+            }
+
+            // Show loading state
+            showLoading() {
+                this.elements.outputArea.classList.remove('hidden');
+                this.elements.loadingSpinner.classList.remove('hidden');
+                this.elements.generatedContent.classList.add('hidden');
+                this.elements.submitButton.disabled = true;
+            }
+
+            // Hide loading state
+            hideLoading() {
+                this.elements.loadingSpinner.classList.add('hidden');
+                this.elements.submitButton.disabled = false;
+            }
+
+            // Generate exercise using Netlify function
+            async generateExercise(data) {
+                console.log("Form Data Submitted:", data);
+
+                try {
+                    const response = await fetch('/.netlify/functions/generate-exercise', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        this.hideLoading();
+                        this.displayGeneratedResults(result.content, data);
+                    } else {
+                        throw new Error(result.error || 'Failed to generate exercise');
+                    }
+
+                } catch (error) {
+                    console.error('Error generating exercise:', error);
+                    this.hideLoading();
+                    this.showErrors([`Failed to generate exercise: ${error.message}. Please try again.`]);
+                }
+            }
+
+            // Display generated exercise results
+            displayGeneratedResults(generatedContent, formData) {
+                const resultsHtml = this.generateFullResultsHTML(generatedContent, formData);
+                
+                this.elements.generatedContent.innerHTML = resultsHtml;
+                this.elements.generatedContent.classList.remove('hidden');
+                this.elements.generatedContent.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'start' 
+                });
+            }
+
+            // Display placeholder results (fallback)
+            displayResults(data) {
+                const resultsHtml = this.generateResultsHTML(data);
+                
+                this.elements.generatedContent.innerHTML = resultsHtml;
+                this.elements.generatedContent.classList.remove('hidden');
+                this.elements.generatedContent.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'start' 
+                });
+            }
+
+            // Generate HTML for AI-generated exercise content
+            generateFullResultsHTML(generatedContent, formData) {
+                return `
+                    <div class="text-center mb-8">
+                        <div class="success-checkmark">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                        </div>
+                        <h2 class="h2 mb-2">Your Tabletop Exercise Is Ready!</h2>
+                        <p class="text-gray-600">Generated for ${this.escapeHtml(formData.sector)} • ${formData.objectives.length} objectives</p>
+                    </div>
+                    
+                    <div class="mb-8 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
+                        <div class="flex items-start justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-blue-900 flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                Generated Exercise Content
+                            </h3>
+                            <button id="download-btn" class="btn bg-blue-600 text-white hover:bg-blue-700 text-sm px-4 py-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-4-4m4 4l4-4m5-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Download
+                            </button>
+                        </div>
+                        <div class="prose prose-lg max-w-none">
+                            ${generatedContent}
+                        </div>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-3 gap-4 text-center text-sm text-gray-500 pt-4 border-t border-gray-200">
+                        <div>
+                            <strong class="text-gray-700">Sector:</strong><br>
+                            ${this.escapeHtml(formData.sector)}
+                        </div>
+                        <div>
+                            <strong class="text-gray-700">Theme:</strong><br>
+                            ${this.escapeHtml(formData.theme)}
+                        </div>
+                        <div>
+                            <strong class="text-gray-700">Objectives:</strong><br>
+                            ${formData.objectives.length} selected
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Generate HTML for results display
+            generateResultsHTML(data) {
+                return `
+                    <div class="text-center mb-8">
+                        <div class="success-checkmark">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                        </div>
+                        <h2 class="h2 mb-2">Exercise Generated Successfully!</h2>
+                        <p class="text-gray-600">Your customized tabletop exercise is ready for review.</p>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-2 gap-6 mb-8">
+                        <div class="p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border-l-4 border-blue-500">
+                            <h3 class="font-bold text-blue-900 mb-2 flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                </svg>
+                                Organization Sector
+                            </h3>
+                            <p class="text-blue-800 font-medium">${this.escapeHtml(data.sector)}</p>
+                        </div>
+                        <div class="p-6 bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg border-l-4 border-orange-500">
+                            <h3 class="font-bold text-orange-900 mb-2 flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Scenario Theme
+                            </h3>
+                            <p class="text-orange-800 font-medium">${this.escapeHtml(data.theme)}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="p-6 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg border-l-4 border-gray-500 mb-8">
+                        <h3 class="font-bold text-gray-900 mb-4 flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                            </svg>
+                            Exercise Objectives (${data.objectives.length})
+                        </h3>
+                        <ul class="space-y-2">
+                            ${data.objectives.map(obj => `
+                                <li class="flex items-start">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    <span class="text-gray-700">${this.escapeHtml(obj)}</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                    
+                    <div class="p-8 bg-gradient-to-r from-yellow-50 to-amber-50 rounded-xl border border-yellow-200 text-center">
+                        <div class="w-16 h-16 bg-yellow-400 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-yellow-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <h4 class="text-lg font-semibold text-yellow-900 mb-2">Coming Soon: Full Scenario Generation</h4>
+                        <p class="text-yellow-800">The complete tabletop exercise scenario with detailed phases, characters, and discussion prompts will be generated here in the next version.</p>
+                    </div>
+                `;
+            }
+
+            // Show error messages with accessibility support
+            showErrors(errors) {
+                this.elements.errorArea.innerHTML = errors.map(error => 
+                    `<p class="mb-2 last:mb-0">${this.escapeHtml(error)}</p>`
+                ).join('');
+                this.elements.errorArea.classList.remove('hidden');
+                this.elements.errorArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+
+            // Clear all error messages
+            clearErrors() {
+                this.elements.errorArea.classList.add('hidden');
+                this.elements.errorArea.innerHTML = '';
+            }
+
+            // Escape HTML to prevent XSS
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+        }
+
+        // Initialize the application when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            new TabletopExerciseApp();
+        });
+    </script>
+
+</body>
+</html>

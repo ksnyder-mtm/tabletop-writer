@@ -1,0 +1,65 @@
+﻿A Breach Beyond: Navigating a Cross-Organizational Cyber Crisis
+
+
+Scenario Overview: 
+This tabletop exercise presents a multi-stage cybersecurity incident targeting ClimateNow, a 250-person U.S. nonprofit focused on fighting climate change. The organization faces a sophisticated attack originating from a compromised account of an academic research partner, which then spreads to ClimateNow's systems. The scenario highlights the challenges of responding to a cybersecurity threat that exploits the interconnected nature of partnerships in today's digital world.
+Incident Response Team and Key Players
+* CFAO and Incident Response Team Lead - Humphreys
+* Technical Lead - Kamenko
+* Data Governance Lead - Jarasa
+* Legal – Erin/Humphreys
+* Communications Lead - Suzanne
+* Human Resources Lead- Lindsay
+* Development Lead – Julia
+* President - Kim
+Scenario Progression
+Phase 1: Compromised Partner Account: The Accountability Campaign Manager receives an email from an academic researcher on their project about unusual activity on an email account. The researcher suspects their account has been hacked and is worried about what they should do.
+* What are the immediate actions ClimateNow should take upon learning of a potential compromise of theirs and a partner’s account?
+* How can ClimateNow verify the legitimacy of the reported incident with the researcher?
+* What communication channels and protocols should be used to coordinate with the affected researcher while maintaining security?
+* How should the incident response team be activated and what are their initial priorities?
+* What other stakeholders should be involved at this point?
+
+
+Phase 2: Investigation and Partner Exposure
+The Campaign Manager reports suspicious emails originating from earlier communications with a researcher.  IT's initial analysis suggests the Campaign Manager’s machine is infected with malware, which was activated through an email link, and then got copied to an external drive. The source of the attack was likely from having clicked a malicious link in the compromised researcher’s email. The researcher works with frontline climate activists, who are frequent targets of attack. 
+* What steps should ClimateNow take to contain the spread of malware within their network?
+* What about the researcher’s email account?
+* How far inside of ClimateNow’s systems has this spread? How would IT know?
+* What are the considerations for communicating about the incident internally and with partners at this stage?
+* How should ClimateNow prioritize response actions based on the information available?
+
+
+Phase 3: Data Exfiltration Discovered 
+IT’s investigation has necessitated the involvement of the Data Governance Lead. It is likely that the malware has allowed the attacker to access and exfiltrate sensitive research data and partnership information. Personal Identifiable Information (PII) may have also been exposed as part of this breach. 
+* What is the process for investigating the extent of data exfiltration?
+* How should the team classify and prioritize the sensitivity of the exfiltrated data?
+* What are the legal and contractual implications of the data breach, and how should ClimateNow navigate them?
+* How can ClimateNow work with the partners to assess the full scope of data loss?
+
+
+Phase 4: Partner Organization Targeted 
+The compromised researcher calls the C&E Program Managing Director to report that the attacker is now threatening to publish stolen data, including joint project plans with ClimateNow, unless a ransom is paid.
+* How should ClimateNow respond to the ransom demand?
+* What are the potential risks and benefits of different response options (e.g., paying the ransom, refusing to pay, negotiating)?
+* What legal considerations and obligations should guide ClimateNow's approach to this joint decision?
+* How can the organization mitigate the risks of sensitive data being publicly released?
+Phase 5: Doxing Threats Emerge
+As ClimateNow works to contain the breach, the Communications Lead reports that the attacker has posted online threats to release personal information of ClimateNow's staff, partners, and donors unless their demands are met. The attacker claims to have accessed this sensitive data during the breach.
+Discussion Questions:
+* What immediate steps should the team take to assess the credibility and severity of the doxing threats?
+* How can ClimateNow prioritize the protection of its staff, partners, and donors in light of these threats?
+* What are the potential legal and ethical considerations in responding to the attacker's demands?
+* How should ClimateNow adapt its crisis communication strategy to manage the risk of personal information being released while reassuring stakeholders?
+Phase 6: Containment and Mitigation 
+ClimateNow decides not to comply with the attacker's demands and instead focuses on containment and mitigation. The Technical Lead works to secure systems and prevent further data exfiltration. The Legal and Communications teams collaborate to develop a plan to support affected individuals if doxing occurs.
+Discussion Questions:
+* What technical measures can ClimateNow implement to prevent the further spread and potential release of sensitive data?
+* How can ClimateNow work with partners to identify and protect individuals at higher risk of being doxed?
+* What legal steps can be taken to respond to doxing if it occurs, and how can ClimateNow support affected individuals?
+Phase 7: Lessons Learned and Resilience Planning 
+With the immediate crisis contained, the CFAO convenes an after-action review to assess the incident response. The team discusses the importance of proactive measures to protect against doxing and other malicious activities directed against colleagues and staff --  and the need for robust support mechanisms for affected individuals.
+Discussion Questions:
+1. How can ClimateNow and its partners improve their data governance and access controls to minimize the risk of sensitive personal information being compromised?
+2. What proactive measures can be implemented to protect staff, partners, and donors from malicious activity?
+3. How can ClimateNow foster a culture of safety and resilience in the face of increasingly personal threats against individuals associated with the organization?
