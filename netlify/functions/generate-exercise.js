@@ -118,13 +118,18 @@ Create a fictional nonprofit with:
 - Key operational details that matter for the crisis
 
 **3. INCIDENT RESPONSE TEAM**
-List 5-6 key roles with names and titles:
-- Executive leadership (ED/CEO)
-- IT/Technical lead  
+Note: These are the key roles that need to be covered in the simulation. Not all positions may be available, so some individuals may need to cover multiple roles.
+
+List 5-6 key roles from these categories:
+- Executive leadership (CEO/Executive Director)
+- COO/Operations lead
+- CFO/Finance lead  
+- IT/Technical lead
 - Communications lead
+- Development/Fundraising lead
+- Data governance lead
 - Legal counsel
-- Operations lead
-- Other relevant roles for the scenario
+- HR lead (if relevant to scenario)
 
 **4. EXERCISE PHASES (3-4 phases)**
 For each phase include:
@@ -135,9 +140,10 @@ For each phase include:
 
 **FORMATTING REQUIREMENTS:**
 - Use HTML headings: <h3> for main sections, <h4> for phases
-- Use <p> tags for paragraphs
+- Use <p> tags for paragraphs with <br><br> between sections for spacing
 - Use <ul> and <li> for lists
 - Use <strong> for emphasis on key points
+- Add <div style="margin-bottom: 2rem;"> around each major section for spacing
 - Keep tone professional but accessible
 - Make discussion questions thought-provoking, focusing on decision-making and process testing
 
