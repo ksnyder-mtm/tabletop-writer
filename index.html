@@ -257,6 +257,10 @@
         .prose li {
             margin-bottom: 0.5rem;
         }
+        .prose p strong {
+            display: inline-block;
+            margin-right: 0.5rem;
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -603,9 +607,36 @@
                 }
             }
 
+            // Process content to ensure proper formatting
+            processGeneratedContent(content) {
+                // Ensure proper spacing before Key Inject and Discussion Questions
+                let processedContent = content;
+                
+                // Add line break and spacing before "Key Inject:" if it's running together with previous text
+                processedContent = processedContent.replace(/([^>\s])(\s*<strong>Key Inject:)/gi, '$1</p>\n<div style="margin-bottom: 1rem;"></div>\n<p>$2');
+                processedContent = processedContent.replace(/([^>\s])(\s*Key Inject:)/gi, '$1</p>\n<div style="margin-bottom: 1rem;"></div>\n<p><strong>Key Inject:</strong>');
+                
+                // Add line break and spacing before "Discussion Questions:" if it's running together with previous text
+                processedContent = processedContent.replace(/([^>\s])(\s*<strong>Discussion Questions:)/gi, '$1</p>\n<div style="margin-bottom: 1rem;"></div>\n<p>$2');
+                processedContent = processedContent.replace(/([^>\s])(\s*Discussion Questions:)/gi, '$1</p>\n<div style="margin-bottom: 1rem;"></div>\n<p><strong>Discussion Questions:</strong>');
+                
+                // Also handle cases where they might be bold without <strong> tags
+                processedContent = processedContent.replace(/([^>\s])(\s*\*\*Key Inject:\*\*)/gi, '$1</p>\n<div style="margin-bottom: 1rem;"></div>\n<p><strong>Key Inject:</strong>');
+                processedContent = processedContent.replace(/([^>\s])(\s*\*\*Discussion Questions:\*\*)/gi, '$1</p>\n<div style="margin-bottom: 1rem;"></div>\n<p><strong>Discussion Questions:</strong>');
+                
+                // Clean up any double closing/opening tags
+                processedContent = processedContent.replace(/<\/p>\s*<\/p>/g, '</p>');
+                processedContent = processedContent.replace(/<p>\s*<p>/g, '<p>');
+                processedContent = processedContent.replace(/<\/p>\s*<p>\s*<\/p>/g, '</p>');
+                
+                return processedContent;
+            }
+
             // Display generated exercise results
             displayGeneratedResults(generatedContent, formData) {
-                const resultsHtml = this.generateFullResultsHTML(generatedContent, formData);
+                // Process the content to ensure proper formatting
+                const processedContent = this.processGeneratedContent(generatedContent);
+                const resultsHtml = this.generateFullResultsHTML(processedContent, formData);
                 
                 this.elements.generatedContent.innerHTML = resultsHtml;
                 this.elements.generatedContent.classList.remove('hidden');
@@ -615,7 +646,7 @@
                 });
 
                 // Store content for download functionality
-                this.currentExerciseContent = generatedContent;
+                this.currentExerciseContent = processedContent;
                 this.currentFormData = formData;
 
                 // Bind download button event

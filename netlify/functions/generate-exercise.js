@@ -138,13 +138,23 @@ List 5-6 key roles from these categories:
 - HR lead (if relevant to scenario)
 
 **4. EXERCISE PHASES (exactly ${numPhases} phases)**
-This is a ${duration}-minute executive-level tabletop (not technical). Create exactly ${numPhases} phases:
+This is a ${duration}-minute executive-level tabletop (not technical). Create exactly ${numPhases} phases.
 
-For each phase include:
-- **Phase title** with timeline (e.g., ${phaseExamples})
-- **Situation description** (2-3 sentences of what's happening)
-- **Key inject** (new information that complicates the situation)
-- **Discussion questions** (2-3 focused questions for executive decision-making)
+CRITICAL: Format each phase EXACTLY like this example:
+<h4>Phase 1 (Minutes 1-10): Initial Detection</h4>
+<p>The IT director reports unusual network activity and several employees report their computers are running slowly. Initial investigation suggests possible malware infection affecting multiple departments.</p>
+<div style="margin-bottom: 1rem;"></div>
+<p><strong>Key Inject:</strong> The finance team discovers they cannot access critical donor database systems, and payroll processing for 200+ staff members is scheduled for tomorrow.</p>
+<div style="margin-bottom: 1rem;"></div>
+<p><strong>Discussion Questions:</strong></p>
+<ul>
+<li>Who should be on the immediate response team and what are their roles?</li>
+<li>What external parties need to be notified at this stage?</li>
+<li>How do we maintain operations while investigating the issue?</li>
+</ul>
+<div style="margin-bottom: 1.5rem;"></div>
+
+Important: Each phase MUST follow this exact format with proper HTML tags and spacing divs.
 
 **5. WRAP-UP SECTION**
 Add a final section titled "Next Steps and Improvements (Minutes ${duration - 5}-${duration})" with:
@@ -153,12 +163,12 @@ Add a final section titled "Next Steps and Improvements (Minutes ${duration - 5}
 - Areas for improvement identified during the simulation
 
 **FORMATTING REQUIREMENTS:**
-- Use HTML headings: <h3> for main sections, <h4> for phases
+- Use HTML headings: <h3> for main sections (Scenario Overview, Organization Profile, etc.)
 - Add <div style="margin-bottom: 2rem;"></div> after each major section for spacing
-- Add <div style="margin-bottom: 1.5rem;"></div> after each phase
-- Add <div style="margin-bottom: 1rem;"></div> after each situation description
-- Use <ul> and <li> for lists
-- Use <strong> for emphasis on key points
+- Follow the EXACT phase format shown in the example above
+- Use <ul> and <li> for all lists
+- Use <p> tags for all paragraphs
+- Use <strong> for emphasis on key points like "Key Inject:" and "Discussion Questions:"
 - Keep tone professional but accessible for busy executives
 - Focus discussion questions on strategic decisions, not technical implementation
 
