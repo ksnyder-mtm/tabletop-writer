@@ -168,7 +168,7 @@ exports.handler = async (event, context) => {
 
   try {
     // Parse request body
-    const { sector, theme, objectives, duration, staffCount, revenueBand } = JSON.parse(event.body);
+    const { sector, theme, objectives, duration, staffCount, revenueBand, participantMode, selectedRoles } = JSON.parse(event.body);
 
     // Validate required fields
     if (!sector || !theme || !objectives || objectives.length === 0) {
@@ -192,7 +192,7 @@ exports.handler = async (event, context) => {
     const themeKey = identifyThemeKey(theme);
 
     // Create the prompt based on sample exercises with scenario-specific roles
-    const prompt = createTabletopPrompt(sector, theme, objectives, duration || 60, themeKey, staffCount, revenueBand);
+    const prompt = createTabletopPrompt(sector, theme, objectives, duration || 60, themeKey, staffCount, revenueBand, participantMode, selectedRoles);
 
     // Call Anthropic API for initial generation
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -252,6 +252,8 @@ exports.handler = async (event, context) => {
           duration,
           staffCount,
           revenueBand,
+          participantMode,
+          selectedRoles,
           generatedAt: new Date().toISOString()
         }
       })
@@ -309,12 +311,65 @@ function buildOrgContext(staffCount, revenueBand) {
   return { sizeCategory, staffDescription, roleGuidance, staffCount, revenueBand };
 }
 
-function createTabletopPrompt(sector, theme, objectives, duration, themeKey, staffCount, revenueBand) {
+// Helper to identify missing critical roles when user manually selects participants
+function identifyMissingRoles(selectedRoles, themeKey) {
+  const mapping = SCENARIO_ROLE_MAPPINGS[themeKey] || SCENARIO_ROLE_MAPPINGS['cyber_breach'];
+
+  // Normalize selected roles for comparison
+  const selectedLower = selectedRoles.map(r => r.toLowerCase());
+
+  // Role mapping for comparison (user-friendly names to critical role titles)
+  const roleMatches = {
+    'executive director': ['executive director', 'ceo', 'ed'],
+    'operations director': ['operations', 'ops'],
+    'finance director': ['cfo', 'finance', 'treasurer'],
+    'development director': ['development', 'fundraising'],
+    'communications director': ['communications', 'comms', 'marketing', 'pr'],
+    'programs director': ['program', 'programs', 'services'],
+    'it director': ['it', 'technical', 'technology', 'tech lead'],
+    'hr director': ['hr', 'human resources', 'people'],
+    'legal counsel': ['legal', 'counsel', 'attorney', 'lawyer'],
+    'board member': ['board', 'chair', 'treasurer', 'governance'],
+    'data governance lead': ['data governance', 'data', 'privacy']
+  };
+
+  const missingRoles = [];
+  for (const criticalRole of mapping.critical) {
+    const criticalLower = criticalRole.title.toLowerCase();
+    let found = false;
+
+    // Check if any selected role matches this critical role
+    for (const selected of selectedLower) {
+      // Direct match
+      if (criticalLower.includes(selected) || selected.includes(criticalLower.split('/')[0].trim())) {
+        found = true;
+        break;
+      }
+      // Check role mappings
+      for (const [key, aliases] of Object.entries(roleMatches)) {
+        if (selected.includes(key) || aliases.some(alias => selected.includes(alias))) {
+          if (criticalLower.includes(key) || aliases.some(alias => criticalLower.includes(alias))) {
+            found = true;
+            break;
+          }
+        }
+      }
+      if (found) break;
+    }
+
+    if (!found) {
+      missingRoles.push(criticalRole);
+    }
+  }
+
+  return missingRoles;
+}
+
+function createTabletopPrompt(sector, theme, objectives, duration, themeKey, staffCount, revenueBand, participantMode, selectedRoles) {
   const objectivesList = objectives.map(obj => `• ${obj}`).join('\n');
   const numPhases = duration === 90 ? 6 : 4;
-  const roleSection = buildRoleSection(themeKey);
 
-  // Get the critical roles for reference in discussion questions
+  // Get the critical roles for reference
   const mapping = SCENARIO_ROLE_MAPPINGS[themeKey] || SCENARIO_ROLE_MAPPINGS['cyber_breach'];
   const criticalRoleNames = mapping.critical.map(r => r.title).join(', ');
 
@@ -323,6 +378,38 @@ function createTabletopPrompt(sector, theme, objectives, duration, themeKey, sta
 
   // Generate a unique seed for name variation
   const nameSeed = Date.now().toString(36);
+
+  // Determine role section and missing roles guidance based on participant mode
+  let roleSection;
+  let missingRolesGuidance = '';
+
+  if (participantMode === 'manual' && selectedRoles && selectedRoles.length > 0) {
+    // Manual mode: use selected roles and identify gaps
+    const missingRoles = identifyMissingRoles(selectedRoles, themeKey);
+
+    roleSection = `**3. EXERCISE PARTICIPANTS (User-Specified)**
+The following roles will be present at this tabletop exercise:
+${selectedRoles.map(role => `• ${role}`).join('\n')}
+
+Create named characters for ONLY these roles. Give each person a realistic name and their specific responsibilities for this crisis.`;
+
+    if (missingRoles.length > 0) {
+      const missingList = missingRoles.map(r => `• ${r.title} (typically handles: ${r.focus})`).join('\n');
+      missingRolesGuidance = `
+**MISSING CRITICAL ROLES:**
+The following roles are typically critical for a ${themeKey.replace('_', ' ')} scenario but will NOT be in the room:
+${missingList}
+
+IMPORTANT INSTRUCTIONS FOR HANDLING MISSING ROLES:
+1. During the exercise phases, include 1-2 moments where participants realize they need input from a missing role
+2. Add discussion questions like: "The team realizes they need legal guidance, but Legal Counsel is not present. How do you proceed? Who makes the call to engage them?"
+3. In the wrap-up section, include a recommendation: "Consider adding [missing role(s)] to your incident response team for ${themeKey.replace('_', ' ')} scenarios"
+4. This creates a learning moment about team composition without derailing the exercise`;
+    }
+  } else {
+    // Auto mode: use existing behavior
+    roleSection = buildRoleSection(themeKey);
+  }
 
   return `IMPORTANT: Generate the COMPLETE exercise immediately. Do NOT ask clarifying questions. Do NOT ask for confirmation. Do NOT provide a partial response. Output the full, detailed tabletop exercise now.
 
@@ -335,11 +422,13 @@ Create a comprehensive tabletop exercise scenario for a nonprofit organization. 
 - Exercise duration: ${duration} minutes
 - Organization size: ${orgContext.staffDescription}
 - Annual revenue: ${revenueBand || 'Not specified'}
+- Participant selection: ${participantMode === 'manual' ? 'User-specified attendees' : 'Auto-selected based on scenario'}
 - Learning objectives to address:
 ${objectivesList}
 
 **ORGANIZATION SIZE GUIDANCE:**
 ${orgContext.roleGuidance}
+${missingRolesGuidance}
 
 **NAME GENERATION REQUIREMENTS (CRITICAL):**
 Generate UNIQUE, DIVERSE names for all characters. Variation seed: ${nameSeed}
@@ -364,11 +453,11 @@ Create a fictional nonprofit with:
 
 ${roleSection}
 
-IMPORTANT: The roles listed above are SPECIFICALLY CHOSEN for this ${themeKey.replace('_', ' ')} scenario. You MUST:
+${participantMode === 'manual' ? `IMPORTANT: Only include the user-specified roles listed above. Give each person a realistic name and their specific focus area for THIS crisis. Reference these specific roles by name throughout the phases and discussion questions.` : `IMPORTANT: The roles listed above are SPECIFICALLY CHOSEN for this ${themeKey.replace('_', ' ')} scenario. You MUST:
 - Include ALL critical roles in the Incident Response Team section
 - Include 1-2 supporting roles that are most relevant
 - Give each person a realistic name and their specific focus area for THIS crisis
-- Reference these specific roles by name throughout the phases and discussion questions
+- Reference these specific roles by name throughout the phases and discussion questions`}
 
 **4. EXERCISE PHASES (exactly ${numPhases} phases)**
 This is a ${duration}-minute executive-level tabletop (not technical). Create exactly ${numPhases} phases.

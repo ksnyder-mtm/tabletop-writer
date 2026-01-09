@@ -357,9 +357,77 @@
                 </div>
             </div>
 
-            <!-- Step 3: Exercise Objectives -->
+            <!-- Step 3: Exercise Participants -->
             <div class="form-section">
                 <div class="section-number">3</div>
+                <h2 class="h3 mb-6">Exercise Participants</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-3">Who will participate in this tabletop?</label>
+                        <div class="flex gap-4">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="participant_mode" value="auto" checked class="form-checkbox">
+                                <span class="text-gray-700">Auto-select based on scenario</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="participant_mode" value="manual" class="form-checkbox">
+                                <span class="text-gray-700">I'll specify who's attending</span>
+                            </label>
+                        </div>
+                        <p class="text-sm text-gray-500 mt-2">Auto-select will choose appropriate roles for the threat type. Manual selection lets you match your actual attendees.</p>
+                    </div>
+                    <div id="manual-roles-section" class="hidden">
+                        <label class="block text-sm font-medium text-gray-700 mb-3">Select roles that will be present:</label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input id="role-ed" name="participant_roles" type="checkbox" value="Executive Director" class="form-checkbox">
+                                <label for="role-ed" class="font-medium text-gray-700 cursor-pointer">Executive Director / CEO</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input id="role-ops" name="participant_roles" type="checkbox" value="Operations Director" class="form-checkbox">
+                                <label for="role-ops" class="font-medium text-gray-700 cursor-pointer">Operations Director</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input id="role-finance" name="participant_roles" type="checkbox" value="Finance Director" class="form-checkbox">
+                                <label for="role-finance" class="font-medium text-gray-700 cursor-pointer">Finance Director / CFO</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input id="role-dev" name="participant_roles" type="checkbox" value="Development Director" class="form-checkbox">
+                                <label for="role-dev" class="font-medium text-gray-700 cursor-pointer">Development / Fundraising</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input id="role-comms" name="participant_roles" type="checkbox" value="Communications Director" class="form-checkbox">
+                                <label for="role-comms" class="font-medium text-gray-700 cursor-pointer">Communications / Marketing</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input id="role-programs" name="participant_roles" type="checkbox" value="Programs Director" class="form-checkbox">
+                                <label for="role-programs" class="font-medium text-gray-700 cursor-pointer">Programs / Services Director</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input id="role-it" name="participant_roles" type="checkbox" value="IT Director" class="form-checkbox">
+                                <label for="role-it" class="font-medium text-gray-700 cursor-pointer">IT / Technology Lead</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input id="role-hr" name="participant_roles" type="checkbox" value="HR Director" class="form-checkbox">
+                                <label for="role-hr" class="font-medium text-gray-700 cursor-pointer">HR / People Operations</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input id="role-legal" name="participant_roles" type="checkbox" value="Legal Counsel" class="form-checkbox">
+                                <label for="role-legal" class="font-medium text-gray-700 cursor-pointer">Legal Counsel</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input id="role-board" name="participant_roles" type="checkbox" value="Board Member" class="form-checkbox">
+                                <label for="role-board" class="font-medium text-gray-700 cursor-pointer">Board Member</label>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-500 mt-3">If critical roles for this scenario are missing, the exercise will include moments where participants need to engage those functions.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4: Exercise Objectives -->
+            <div class="form-section">
+                <div class="section-number">4</div>
                 <h2 class="h3 mb-6">Exercise Objectives (Select up to 3)</h2>
                 <div class="checkbox-group">
                     <div class="checkbox-item">
@@ -508,6 +576,20 @@
                 });
                 // Track custom objective for progress
                 this.elements.customObjectiveInput.addEventListener('input', () => this.updateProgressBar());
+
+                // Handle participant mode toggle
+                const participantModeRadios = document.querySelectorAll('input[name="participant_mode"]');
+                const manualRolesSection = document.getElementById('manual-roles-section');
+                participantModeRadios.forEach(radio => {
+                    radio.addEventListener('change', (e) => {
+                        if (e.target.value === 'manual') {
+                            manualRolesSection.classList.remove('hidden');
+                        } else {
+                            manualRolesSection.classList.add('hidden');
+                        }
+                        this.updateProgressBar();
+                    });
+                });
             }
 
             // Handle form submission
@@ -545,13 +627,21 @@
                 const revenueSelect = document.getElementById('annual-revenue');
                 const revenueBand = revenueSelect.options[revenueSelect.selectedIndex].text;
 
+                // Get participant mode and selected roles
+                const participantMode = formData.get('participant_mode') || 'auto';
+                const selectedRoles = participantMode === 'manual'
+                    ? Array.from(document.querySelectorAll('input[name="participant_roles"]:checked')).map(cb => cb.value)
+                    : [];
+
                 return {
                     sector: formData.get('sector'),
                     duration: formData.get('duration'),
                     theme: theme,
                     objectives: selectedObjectives,
                     staffCount: staffCount,
-                    revenueBand: revenueBand
+                    revenueBand: revenueBand,
+                    participantMode: participantMode,
+                    selectedRoles: selectedRoles
                 };
             }
 
@@ -559,23 +649,32 @@
             validateForm() {
                 this.clearErrors();
                 const errors = [];
-                
+
                 const objectives = document.querySelectorAll('input[name="objectives"]:checked');
                 const customObjective = this.elements.customObjectiveInput.value.trim();
-                
+
                 if (objectives.length === 0 && !customObjective) {
                     errors.push('Please select at least one objective or enter a custom objective.');
                 }
-                
+
                 if (objectives.length > this.config.maxObjectives) {
                     errors.push(`You can select a maximum of ${this.config.maxObjectives} objectives.`);
                 }
-                
+
+                // Validate manual participant selection
+                const participantMode = document.querySelector('input[name="participant_mode"]:checked')?.value;
+                if (participantMode === 'manual') {
+                    const selectedRoles = document.querySelectorAll('input[name="participant_roles"]:checked');
+                    if (selectedRoles.length === 0) {
+                        errors.push('Please select at least one participant role, or switch to auto-select mode.');
+                    }
+                }
+
                 if (errors.length > 0) {
                     this.showErrors(errors);
                     return false;
                 }
-                
+
                 return true;
             }
 
