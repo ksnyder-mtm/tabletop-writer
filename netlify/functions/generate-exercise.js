@@ -203,7 +203,7 @@ exports.handler = async (event, context) => {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-3-5-sonnet-latest',
+        model: 'claude-3-5-haiku-latest',
         max_tokens: 2500,
         temperature: 0.7,
         messages: [
@@ -217,48 +217,21 @@ exports.handler = async (event, context) => {
 
     if (!response.ok) {
       const errorData = await response.text();
-      console.error('Anthropic API Error:', errorData);
+      console.error('Anthropic API Error:', response.status, errorData);
       return {
         statusCode: response.status,
-        body: JSON.stringify({ error: 'Failed to generate exercise scenario' })
+        body: JSON.stringify({
+          error: 'Failed to generate exercise scenario',
+          details: `API returned ${response.status}: ${errorData.substring(0, 200)}`
+        })
       };
     }
 
     const data = await response.json();
     let generatedContent = data.content[0].text;
 
-    // Validation pass: Check coherence and make improvements
-    const validationPrompt = createValidationPrompt(generatedContent, sector, theme, objectives, themeKey);
-
-    const validationResponse = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: 'claude-3-5-sonnet-latest',
-        max_tokens: 3000,
-        temperature: 0.3, // Lower temperature for more consistent validation
-        messages: [
-          {
-            role: 'user',
-            content: validationPrompt
-          }
-        ]
-      })
-    });
-
-    if (validationResponse.ok) {
-      const validationData = await validationResponse.json();
-      const validatedContent = validationData.content[0].text;
-
-      // Use validated content if it appears to be a complete exercise
-      if (validatedContent.includes('<h3>') && validatedContent.length > 1000) {
-        generatedContent = validatedContent;
-      }
-    }
+    // Note: Validation pass temporarily disabled to reduce latency
+    // The improved prompt with scenario-specific roles should produce good results without validation
 
     return {
       statusCode: 200,

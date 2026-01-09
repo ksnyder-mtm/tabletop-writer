@@ -5,6 +5,10 @@
 [functions]
   node_bundler = "esbuild"
 
+[functions."generate-exercise"]
+  # Increase timeout for AI generation (requires Netlify Pro plan for >10s)
+  timeout = 60
+
 [[headers]]
   for = "/*"
   [headers.values]
