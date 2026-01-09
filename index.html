@@ -291,18 +291,37 @@
             <div class="form-section">
                 <div class="section-number">1</div>
                 <h2 class="h3 mb-6">Organization Profile</h2>
-                <div>
-                    <label for="nonprofit-sector" class="block text-sm font-medium text-gray-700 mb-2">Non-Profit Sector</label>
-                    <select id="nonprofit-sector" name="sector" class="form-select">
-                        <option>Education</option>
-                        <option>Human & Civil Rights</option>
-                        <option>Environmental</option>
-                        <option>Health Services</option>
-                        <option>Advocacy & Political</option>
-                        <option>Arts & Culture</option>
-                        <option>International Aid</option>
-                        <option>Other</option>
-                    </select>
+                <div class="space-y-4">
+                    <div>
+                        <label for="nonprofit-sector" class="block text-sm font-medium text-gray-700 mb-2">Non-Profit Sector</label>
+                        <select id="nonprofit-sector" name="sector" class="form-select">
+                            <option>Education</option>
+                            <option>Human & Civil Rights</option>
+                            <option>Environmental</option>
+                            <option>Health Services</option>
+                            <option>Advocacy & Political</option>
+                            <option>Arts & Culture</option>
+                            <option>International Aid</option>
+                            <option>Other</option>
+                        </select>
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="staff-count" class="block text-sm font-medium text-gray-700 mb-2">Number of Staff</label>
+                            <input type="number" id="staff-count" name="staff_count" class="form-input" placeholder="e.g., 15" min="1" max="10000">
+                            <p class="text-sm text-gray-500 mt-1">Full-time equivalent employees</p>
+                        </div>
+                        <div>
+                            <label for="annual-revenue" class="block text-sm font-medium text-gray-700 mb-2">Annual Revenue</label>
+                            <select id="annual-revenue" name="annual_revenue" class="form-select">
+                                <option value="under_500k">Under $500K</option>
+                                <option value="500k_1m">$500K - $1M</option>
+                                <option value="1m_5m">$1M - $5M</option>
+                                <option value="5m_25m">$5M - $25M</option>
+                                <option value="over_25m">$25M+</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -510,20 +529,29 @@
                 const selectedObjectives = Array.from(
                     document.querySelectorAll('input[name="objectives"]:checked')
                 ).map(cb => cb.value);
-                
+
                 const customObjective = formData.get('custom_objective');
                 if (customObjective && customObjective.trim()) {
                     selectedObjectives.push(customObjective.trim());
                 }
-                
-                const theme = formData.get('custom_theme').trim() || 
+
+                const theme = formData.get('custom_theme').trim() ||
                              this.elements.themeDropdown.options[this.elements.themeDropdown.selectedIndex].text;
+
+                // Get staff count (default to empty if not provided)
+                const staffCount = formData.get('staff_count') ? parseInt(formData.get('staff_count'), 10) : null;
+
+                // Get revenue band display text
+                const revenueSelect = document.getElementById('annual-revenue');
+                const revenueBand = revenueSelect.options[revenueSelect.selectedIndex].text;
 
                 return {
                     sector: formData.get('sector'),
                     duration: formData.get('duration'),
                     theme: theme,
-                    objectives: selectedObjectives
+                    objectives: selectedObjectives,
+                    staffCount: staffCount,
+                    revenueBand: revenueBand
                 };
             }
 
@@ -822,10 +850,18 @@
                         </div>
                     </div>
                     
-                    <div class="grid md:grid-cols-4 gap-4 text-center text-sm text-gray-500 pt-4 border-t border-gray-200">
+                    <div class="grid md:grid-cols-3 lg:grid-cols-6 gap-4 text-center text-sm text-gray-500 pt-4 border-t border-gray-200">
                         <div>
                             <strong class="text-gray-700">Sector:</strong><br>
                             ${this.escapeHtml(formData.sector)}
+                        </div>
+                        <div>
+                            <strong class="text-gray-700">Staff:</strong><br>
+                            ${formData.staffCount ? formData.staffCount + ' people' : 'Not specified'}
+                        </div>
+                        <div>
+                            <strong class="text-gray-700">Revenue:</strong><br>
+                            ${this.escapeHtml(formData.revenueBand || 'Not specified')}
                         </div>
                         <div>
                             <strong class="text-gray-700">Duration:</strong><br>
@@ -1015,6 +1051,7 @@
     
     <div class="meta-info">
         <p><strong>Organization Sector:</strong> ${this.escapeHtml(this.currentFormData.sector)}</p>
+        <p><strong>Organization Size:</strong> ${this.currentFormData.staffCount ? this.currentFormData.staffCount + ' staff' : 'Not specified'} | ${this.escapeHtml(this.currentFormData.revenueBand || 'Revenue not specified')}</p>
         <p><strong>Exercise Theme:</strong> ${this.escapeHtml(this.currentFormData.theme)}</p>
         <p><strong>Duration:</strong> ${this.currentFormData.duration} minutes</p>
         <p><strong>Learning Objectives:</strong></p>

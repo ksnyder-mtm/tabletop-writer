@@ -168,7 +168,7 @@ exports.handler = async (event, context) => {
 
   try {
     // Parse request body
-    const { sector, theme, objectives, duration } = JSON.parse(event.body);
+    const { sector, theme, objectives, duration, staffCount, revenueBand } = JSON.parse(event.body);
 
     // Validate required fields
     if (!sector || !theme || !objectives || objectives.length === 0) {
@@ -192,7 +192,7 @@ exports.handler = async (event, context) => {
     const themeKey = identifyThemeKey(theme);
 
     // Create the prompt based on sample exercises with scenario-specific roles
-    const prompt = createTabletopPrompt(sector, theme, objectives, duration || 60, themeKey);
+    const prompt = createTabletopPrompt(sector, theme, objectives, duration || 60, themeKey, staffCount, revenueBand);
 
     // Call Anthropic API for initial generation
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -250,6 +250,8 @@ exports.handler = async (event, context) => {
           themeKey,
           objectives,
           duration,
+          staffCount,
+          revenueBand,
           generatedAt: new Date().toISOString()
         }
       })
@@ -264,7 +266,50 @@ exports.handler = async (event, context) => {
   }
 };
 
-function createTabletopPrompt(sector, theme, objectives, duration, themeKey) {
+// Build organization context based on staff count and revenue
+function buildOrgContext(staffCount, revenueBand) {
+  // Determine org size category
+  let sizeCategory = 'medium';
+  let staffDescription = '';
+  let roleGuidance = '';
+
+  if (staffCount && staffCount <= 10) {
+    sizeCategory = 'very_small';
+    staffDescription = `${staffCount} staff members`;
+    roleGuidance = `This is a very small organization where the Executive Director handles most responsibilities and staff wear multiple hats. Do NOT assume dedicated specialists exist. Characters should have combined roles (e.g., "Operations Manager who also handles IT support and HR"). The ED is central to all decisions. Do not assume heavy board involvement in operational crisis response - board members are governance-focused volunteers.`;
+  } else if (staffCount && staffCount <= 25) {
+    sizeCategory = 'small';
+    staffDescription = `${staffCount} staff members`;
+    roleGuidance = `This is a small organization with limited specialized roles. Many staff have overlapping responsibilities. The ED is heavily involved in most decisions. Some roles may be combined (e.g., "Finance and Operations Director"). Do not assume all specialist roles exist - adapt to their capacity.`;
+  } else if (staffCount && staffCount <= 75) {
+    sizeCategory = 'medium';
+    staffDescription = `${staffCount} staff members`;
+    roleGuidance = `This is a mid-sized organization with some dedicated roles but still lean operations. Department heads may exist but often manage multiple areas.`;
+  } else if (staffCount && staffCount > 75) {
+    sizeCategory = 'large';
+    staffDescription = `${staffCount} staff members`;
+    roleGuidance = `This is a larger organization with dedicated departments and specialized staff. Formal reporting structures and clear role definitions are expected.`;
+  } else {
+    // No staff count provided - use revenue as guide
+    if (revenueBand === 'Under $500K' || revenueBand === '$500K - $1M') {
+      sizeCategory = 'small';
+      staffDescription = 'a small staff';
+      roleGuidance = `Based on the budget size, this is likely a small organization. Staff wear multiple hats and the ED is central to decisions. Do not assume dedicated specialists for every function.`;
+    } else if (revenueBand === '$1M - $5M') {
+      sizeCategory = 'medium';
+      staffDescription = 'a mid-sized staff';
+      roleGuidance = `Based on the budget, this is a mid-sized organization with some specialized roles but lean operations.`;
+    } else {
+      sizeCategory = 'large';
+      staffDescription = 'a larger staff';
+      roleGuidance = `Based on the budget, this organization likely has dedicated departments and specialized staff.`;
+    }
+  }
+
+  return { sizeCategory, staffDescription, roleGuidance, staffCount, revenueBand };
+}
+
+function createTabletopPrompt(sector, theme, objectives, duration, themeKey, staffCount, revenueBand) {
   const objectivesList = objectives.map(obj => `• ${obj}`).join('\n');
   const numPhases = duration === 90 ? 6 : 4;
   const roleSection = buildRoleSection(themeKey);
@@ -273,6 +318,12 @@ function createTabletopPrompt(sector, theme, objectives, duration, themeKey) {
   const mapping = SCENARIO_ROLE_MAPPINGS[themeKey] || SCENARIO_ROLE_MAPPINGS['cyber_breach'];
   const criticalRoleNames = mapping.critical.map(r => r.title).join(', ');
 
+  // Build org context based on size
+  const orgContext = buildOrgContext(staffCount, revenueBand);
+
+  // Generate a unique seed for name variation
+  const nameSeed = Date.now().toString(36);
+
   return `Create a comprehensive tabletop exercise scenario for a nonprofit organization. Use this specification:
 
 **ORGANIZATION CONTEXT:**
@@ -280,8 +331,21 @@ function createTabletopPrompt(sector, theme, objectives, duration, themeKey) {
 - Primary threat: ${theme}
 - Scenario type: ${themeKey.replace('_', ' ')}
 - Exercise duration: ${duration} minutes
+- Organization size: ${orgContext.staffDescription}
+- Annual revenue: ${revenueBand || 'Not specified'}
 - Learning objectives to address:
 ${objectivesList}
+
+**ORGANIZATION SIZE GUIDANCE:**
+${orgContext.roleGuidance}
+
+**NAME GENERATION REQUIREMENTS (CRITICAL):**
+Generate UNIQUE, DIVERSE names for all characters. Variation seed: ${nameSeed}
+- Use a MIX of ethnicities and cultural backgrounds (East Asian, South Asian, Hispanic/Latino, African American, Middle Eastern, European, etc.)
+- Include varied gender representation
+- AVOID common placeholder names like: John, Jane, Sarah, Michael, David, Jennifer, Robert, Maria, James, Emily
+- Use less common but realistic names that reflect the diversity of the nonprofit sector
+- Each generated exercise should have completely different names from any previous exercise
 
 **REQUIRED STRUCTURE:**
 
@@ -291,7 +355,8 @@ Write 2-3 sentences describing the crisis situation. Make it realistic and relev
 **2. ORGANIZATION PROFILE**
 Create a fictional nonprofit with:
 - Realistic name appropriate for ${sector} sector
-- Staff size (50-300 people)
+- Staff size: ${staffCount ? staffCount + ' people' : 'appropriate for ' + (revenueBand || 'a typical nonprofit')}
+- Annual budget: ${revenueBand || 'typical for the sector'}
 - Brief mission statement
 - Key operational details that matter for this specific ${themeKey.replace('_', ' ')} crisis
 
