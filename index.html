@@ -282,7 +282,7 @@
 
         <!-- Progress Bar -->
         <div class="progress-bar mb-8">
-            <div class="progress-fill"></div>
+            <div class="progress-fill" style="width: 33%"></div>
         </div>
 
         <!-- Input Form -->
@@ -416,8 +416,10 @@
 
         <!-- Output Area -->
         <div id="output-area" class="mt-12 hidden">
-             <div id="loading-spinner" class="flex justify-center items-center py-8">
+             <div id="loading-spinner" class="flex flex-col justify-center items-center py-12">
                 <div class="spinner"></div>
+                <p id="loading-message" class="mt-4 text-gray-600 font-medium text-center">Preparing your exercise...</p>
+                <p class="mt-2 text-sm text-gray-400">This typically takes 15-20 seconds</p>
             </div>
             <div id="generated-content" class="card p-8 hidden">
                 <!-- Generated tabletop will appear here -->
@@ -451,13 +453,15 @@
                     form: document.getElementById('ttp-form'),
                     outputArea: document.getElementById('output-area'),
                     loadingSpinner: document.getElementById('loading-spinner'),
+                    loadingMessage: document.getElementById('loading-message'),
                     generatedContent: document.getElementById('generated-content'),
                     customThemeInput: document.getElementById('custom-theme'),
                     themeDropdown: document.getElementById('scenario-theme'),
                     checkboxes: document.querySelectorAll('input[name="objectives"]'),
                     submitButton: document.querySelector('button[type="submit"]'),
                     errorArea: document.getElementById('form-errors'),
-                    customObjectiveInput: document.getElementById('custom-objective')
+                    customObjectiveInput: document.getElementById('custom-objective'),
+                    progressFill: document.querySelector('.progress-fill')
                 };
             }
 
@@ -465,15 +469,26 @@
             init() {
                 this.bindEvents();
                 this.setupFormValidation();
+                this.updateProgressBar();
+                this.loadingTimers = []; // Track timers for cleanup
+                this.abortController = null; // Track active requests
             }
 
             // Bind all event listeners
             bindEvents() {
                 this.elements.form.addEventListener('submit', (e) => this.handleFormSubmit(e));
-                this.elements.customThemeInput.addEventListener('input', () => this.handleCustomThemeInput());
-                this.elements.checkboxes.forEach(checkbox => {
-                    checkbox.addEventListener('change', (e) => this.handleObjectiveChange(e));
+                this.elements.customThemeInput.addEventListener('input', () => {
+                    this.handleCustomThemeInput();
+                    this.updateProgressBar();
                 });
+                this.elements.checkboxes.forEach(checkbox => {
+                    checkbox.addEventListener('change', (e) => {
+                        this.handleObjectiveChange(e);
+                        this.updateProgressBar();
+                    });
+                });
+                // Track custom objective for progress
+                this.elements.customObjectiveInput.addEventListener('input', () => this.updateProgressBar());
             }
 
             // Handle form submission
@@ -561,23 +576,87 @@
                 this.elements.themeDropdown.classList.toggle('bg-gray-100', hasCustomTheme);
             }
 
-            // Show loading state
+            // Show loading state with progress messages
             showLoading() {
                 this.elements.outputArea.classList.remove('hidden');
                 this.elements.loadingSpinner.classList.remove('hidden');
                 this.elements.generatedContent.classList.add('hidden');
                 this.elements.submitButton.disabled = true;
+
+                // Clear any existing timers
+                this.clearLoadingTimers();
+
+                // Update loading message with progress
+                this.updateLoadingMessage('Analyzing scenario requirements...');
+
+                this.loadingTimers.push(
+                    setTimeout(() => this.updateLoadingMessage('Selecting appropriate roles for your scenario...'), 3000),
+                    setTimeout(() => this.updateLoadingMessage('Generating exercise phases and injects...'), 6000),
+                    setTimeout(() => this.updateLoadingMessage('Validating content coherence...'), 12000),
+                    setTimeout(() => this.updateLoadingMessage('Finalizing your exercise...'), 18000)
+                );
             }
 
             // Hide loading state
             hideLoading() {
                 this.elements.loadingSpinner.classList.add('hidden');
                 this.elements.submitButton.disabled = false;
+                this.clearLoadingTimers();
+            }
+
+            // Update the loading message
+            updateLoadingMessage(message) {
+                if (this.elements.loadingMessage) {
+                    this.elements.loadingMessage.textContent = message;
+                }
+            }
+
+            // Clear loading timers to prevent memory leaks
+            clearLoadingTimers() {
+                this.loadingTimers.forEach(timer => clearTimeout(timer));
+                this.loadingTimers = [];
+            }
+
+            // Update progress bar based on form completion
+            updateProgressBar() {
+                let progress = 33; // Sector is always selected (default value)
+
+                // Check if objectives are selected
+                const checkedObjectives = document.querySelectorAll('input[name="objectives"]:checked').length;
+                const hasCustomObjective = this.elements.customObjectiveInput.value.trim() !== '';
+
+                if (checkedObjectives > 0 || hasCustomObjective) {
+                    progress += 34; // Objectives section complete
+                }
+
+                // Check if theme is customized (optional but shows engagement)
+                const hasCustomTheme = this.elements.customThemeInput.value.trim() !== '';
+                if (hasCustomTheme || checkedObjectives > 0 || hasCustomObjective) {
+                    progress += 33; // Ready to generate
+                }
+
+                // Cap at 100
+                progress = Math.min(progress, 100);
+
+                if (this.elements.progressFill) {
+                    this.elements.progressFill.style.width = `${progress}%`;
+                }
             }
 
             // Generate exercise using Netlify function
             async generateExercise(data) {
                 console.log("Form Data Submitted:", data);
+
+                // Cancel any existing request
+                if (this.abortController) {
+                    this.abortController.abort();
+                }
+
+                // Create new abort controller with 90 second timeout
+                this.abortController = new AbortController();
+                const timeoutId = setTimeout(() => {
+                    this.abortController.abort();
+                }, 90000); // 90 seconds - allows for two API calls with validation
 
                 try {
                     const response = await fetch('/.netlify/functions/generate-exercise', {
@@ -585,15 +664,18 @@
                         headers: {
                             'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify(data)
+                        body: JSON.stringify(data),
+                        signal: this.abortController.signal
                     });
+
+                    clearTimeout(timeoutId);
 
                     if (!response.ok) {
                         throw new Error(`HTTP error! status: ${response.status}`);
                     }
 
                     const result = await response.json();
-                    
+
                     if (result.success) {
                         this.hideLoading();
                         this.displayGeneratedResults(result.content, data);
@@ -602,9 +684,17 @@
                     }
 
                 } catch (error) {
+                    clearTimeout(timeoutId);
                     console.error('Error generating exercise:', error);
                     this.hideLoading();
-                    this.showErrors([`Failed to generate exercise: ${error.message}. Please try again.`]);
+
+                    if (error.name === 'AbortError') {
+                        this.showErrors(['Request timed out. The server took too long to respond. Please try again.']);
+                    } else {
+                        this.showErrors([`Failed to generate exercise: ${error.message}. Please try again.`]);
+                    }
+                } finally {
+                    this.abortController = null;
                 }
             }
 
@@ -650,10 +740,10 @@
                 this.currentExerciseContent = processedContent;
                 this.currentFormData = formData;
 
-                // Bind download button event
+                // Bind download button event (use onclick to replace any existing handler)
                 const downloadBtn = document.getElementById('download-btn');
                 if (downloadBtn) {
-                    downloadBtn.addEventListener('click', () => this.downloadExercise());
+                    downloadBtn.onclick = () => this.downloadExercise();
                 }
             }
 
