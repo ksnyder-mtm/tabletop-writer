@@ -324,7 +324,9 @@ function createTabletopPrompt(sector, theme, objectives, duration, themeKey, sta
   // Generate a unique seed for name variation
   const nameSeed = Date.now().toString(36);
 
-  return `Create a comprehensive tabletop exercise scenario for a nonprofit organization. Use this specification:
+  return `IMPORTANT: Generate the COMPLETE exercise immediately. Do NOT ask clarifying questions. Do NOT ask for confirmation. Do NOT provide a partial response. Output the full, detailed tabletop exercise now.
+
+Create a comprehensive tabletop exercise scenario for a nonprofit organization. Use this specification:
 
 **ORGANIZATION CONTEXT:**
 - Sector: ${sector}
